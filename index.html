@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>授業リアクション（先生用）</title>
+  <style>
+    body { font-family: sans-serif; padding: 1rem; }
+    h1 { font-size: 1.5rem; }
+    #sessionId { font-weight: bold; }
+    #qr { margin: 1rem 0; }
+    .bar-container { display: flex; gap: 1rem; margin-top: 1rem; }
+    .bar { width: 100px; background: #eee; text-align: center; padding: 0.5rem; border-radius: 10px; }
+    .bar span { display: block; margin-top: 0.5rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>先生用画面</h1>
+  <button onclick="createSession()">セッション作成</button>
+  <p>セッションID: <span id="sessionId">（未作成）</span></p>
+  <div id="qr"></div>
+  <div class="bar-container">
+    <div class="bar" id="bar-ok">👌 0<span>わかった</span></div>
+    <div class="bar" id="bar-uncertain">🤔 0<span>ちょっと不安</span></div>
+    <div class="bar" id="bar-confused">😵 0<span>わからない</span></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPnHqLQSkG29FYejCOktpR9xHfW3ND5M0",
+      authDomain: "reaction-app-26e1f.firebaseapp.com",
+      databaseURL: "https://reaction-app-26e1f-default-rtdb.firebaseio.com",
+      projectId: "reaction-app-26e1f",
+      storageBucket: "reaction-app-26e1f.appspot.com",
+      messagingSenderId: "374404693278",
+      appId: "1:374404693278:web:281aa8b0485718cc465d0f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let sessionId = null;
+
+    function createSession() {
+      sessionId = Math.random().toString(36).substring(2, 8);
+      document.getElementById('sessionId').textContent = sessionId;
+      const studentUrl = location.origin + '/student.html?session=' + sessionId;
+      QRCode.toCanvas(document.createElement('canvas'), studentUrl, function (err, canvas) {
+        if (!err) {
+          document.getElementById('qr').innerHTML = '';
+          document.getElementById('qr').appendChild(canvas);
+          const urlText = document.createElement('p');
+          urlText.textContent = studentUrl;
+          document.getElementById('qr').appendChild(urlText);
+        }
+      });
+      listenRealtime();
+    }
+
+    function listenRealtime() {
+      const path = 'sessions/' + sessionId;
+      db.ref(path).on('value', (snapshot) => {
+        const data = snapshot.val() || {};
+        const counts = { ok: 0, uncertain: 0, confused: 0 };
+        Object.values(data).forEach(v => {
+          if (v === 'ok') counts.ok++;
+          else if (v === 'uncertain') counts.uncertain++;
+          else if (v === 'confused') counts.confused++;
+        });
+        document.getElementById('bar-ok').innerHTML = `👌 ${counts.ok}<span>わかった</span>`;
+        document.getElementById('bar-uncertain').innerHTML = `🤔 ${counts.uncertain}<span>ちょっと不安</span>`;
+        document.getElementById('bar-confused').innerHTML = `😵 ${counts.confused}<span>わからない</span>`;
+      });
+    }
+  </script>
+</body>
+</html>

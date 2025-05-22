@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>リアクション送信（生徒用）</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2rem; }
+    h1 { font-size: 1.2rem; }
+    button {
+      font-size: 2rem;
+      margin: 1rem;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .ok { background-color: #c8e6c9; }
+    .uncertain { background-color: #fff9c4; }
+    .confused { background-color: #ffcdd2; }
+  </style>
+</head>
+<body>
+  <h1>リアクションを選んでください</h1>
+  <button class="ok" onclick="sendReaction('ok')">👌 わかった</button><br />
+  <button class="uncertain" onclick="sendReaction('uncertain')">🤔 ちょっと不安</button><br />
+  <button class="confused" onclick="sendReaction('confused')">😵 わからない</button>
+
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPnHqLQSkG29FYejCOktpR9xHfW3ND5M0",
+      authDomain: "reaction-app-26e1f.firebaseapp.com",
+      databaseURL: "https://reaction-app-26e1f-default-rtdb.firebaseio.com",
+      projectId: "reaction-app-26e1f",
+      storageBucket: "reaction-app-26e1f.appspot.com",
+      messagingSenderId: "374404693278",
+      appId: "1:374404693278:web:281aa8b0485718cc465d0f"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session');
+
+    function sendReaction(type) {
+      const newRef = db.ref('sessions/' + sessionId).push();
+      newRef.set(type);
+      alert("送信しました！");
+    }
+  </script>
+</body>
+</html>
